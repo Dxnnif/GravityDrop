@@ -28,7 +28,7 @@ struct fisica{
     float cArrasto{0.47f};             //<- coeficiente de arrasto,
     float dAr{1.225};                 //<- densidade do ar em Km por metros cubicos,
     float velocidade{};              //<- m/s,
-    float dt{0.0f};     
+    float dt{0.0f};
     float fArrasto{};              //<- delta time
 };
 
@@ -92,7 +92,6 @@ int main() {
 
             //guarda a velocidade maxima
             if (var.velocidade > dVelocidade) {
-                //dVelocidade = 0;
                 dVelocidade = var.velocidade;
             }
 
