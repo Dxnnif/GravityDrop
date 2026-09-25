@@ -23,83 +23,108 @@ int sleep(int mill) {
     return mill;
 }
 
-struct variaveisGerais{
-    const float gTerrestre{9.80665f};
-    string continuar;
-    float altMaca{};
-    float velocidade{}; // m/s
-    float dt{0.0f}; //delta time
-    int soltar;
+struct fisica{
+    const float gTerrestre{9.80665f};   //<- gravidade terrestre
+    float cArrasto{0.47f};             //<- coeficiente de arrasto,
+    float dAr{1.225};                 //<- densidade do ar em Km por metros cubicos,
+    float velocidade{};              //<- m/s,
+    float dt{0.0f};     
+    float fArrasto{};            //<- delta time
+};
+
+struct maca{
+    fisica var;
+
+    float altMaca{};                         //<- metros,
+    float mMaca{0.15f};                     //<- massa da maça,
+    float rMaca{0.04f};                    //<- raio da maça
+    double aMaca{M_PI * (rMaca * rMaca)}; //<- area da maça
+    float pMaca{mMaca * var.gTerrestre}; //<- peso da maça
 };
 
 int main() {
-    variaveisGerais var;
+    string continuar;
+    float dAltMaca; // dados da altura da maça usada no fim da execuçao
+    fisica var;
+    maca mc;
+    float dVelocidade{1}; //dados da velocidade usada para verificar velocidade maxima atingida pela maça
 
     clear();
     while (true) {
-        cout << "Deseja soltar a maça? (0 = nao, 1 = sim): ";
-        cin >> var.soltar;
+        cout << "Informe a altura aproximada em que a maça esta: ";
+        cin >> mc.altMaca;
 
-        if (var.soltar > 1 || var.soltar < 0) {
-            cout << "Valor invalido!!\n";
-            sleep(3000);
+        dAltMaca = mc.altMaca;
+
+        dVelocidade = 0;
+        var.velocidade = 0;
+        double tempoSimulado(0.0);
+
+        auto instanteAnterior = steady_clock::now();
+
+        cout << fixed << setprecision(3);
+        while (mc.altMaca > 0) {
+            auto instanteAtual = steady_clock::now();
+
+            var.dt = duration<double>(
+                instanteAtual - instanteAnterior
+            ).count();
+
+            instanteAnterior = instanteAtual;
+
+            if (var.dt > 0.05) {
+                var.dt = 0.05;
+            } 
+
+            var.fArrasto = 0.5 * var.cArrasto * var.dAr
+            * mc.aMaca * pow(var.velocidade, 2);
+
+            /*força resultante*/ double fResultante = 
+            mc.pMaca - var.fArrasto;
+
+            double aceleracao = fResultante / mc.mMaca;
+
+            double distanciaPercorrida = var.velocidade * var.dt
+            + 0.5 * aceleracao * pow(var.dt, 2);
+
+            mc.altMaca -= distanciaPercorrida;
+            var.velocidade += aceleracao * var.dt;
+
+            //guarda a velocidade maxima
+            if (var.velocidade > dVelocidade) {
+                //dVelocidade = 0;
+                dVelocidade = var.velocidade;
+            }
+
+            tempoSimulado += var.dt;
+
+            if (mc.altMaca < 0) {
+                mc.altMaca = 0;
+            } if (mc.altMaca == 0) {
+                var.velocidade = 0;
+            }
+            clear();
+            cout << "|----------------------------\n";
+            cout << "|Altura:     \t" << mc.altMaca << " m     \n"
+            << "|Velocidade:\t" << var.velocidade << " m/s\n"
+            << "|dt:          \t" << var.dt << " s/n   \n";
+            sleep(16);
+        }
+        cout << "|___________________________|\n";
+        cout << "\nA maça chegou ao chao. \n";
+        cout << "Tempo de queda: " << tempoSimulado << " segundos\n";
+        cout << "Velocidade de impacto: " << dVelocidade << " m/s\n";
+        cout << "Altura inicia de: " << fixed << setprecision(0) << dAltMaca << " metros\n";
+
+        cout << "Voce deseja fazer outra simulaçao? (sim, nao): ";
+        cin >> continuar;
+
+        if (continuar == "sim" || continuar == "s") {
             clear();
             continue;
         } else {
-            cout << "Informe a altura aproximada em que a maça esta: ";
-            cin >> var.altMaca;
-
-            var.velocidade = 0.0;
-            double tempoSimulado(0.0);
-
-            auto instanteAnterior = steady_clock::now();
-
-            cout << fixed << setprecision(3);
-            while (var.altMaca > 0) {
-                auto instanteAtual = steady_clock::now();
-
-                var.dt = duration<double>(
-                    instanteAtual - instanteAnterior
-                ).count();
-
-                instanteAnterior = instanteAtual;
-
-                if (var.dt > 0.05) {
-                    var.dt = 0.05;
-                } 
-
-                double distanciaPercorrida = var.velocidade * var.dt
-                + 0.5 * var.gTerrestre
-                * var.dt
-                * var.dt;
-
-                var.altMaca -= distanciaPercorrida;
-                var.velocidade += var.gTerrestre * var.dt;
-
-                tempoSimulado += var.dt;
-
-                if (var.altMaca < 0) {
-                    var.altMaca = 0;
-                }
-
-                cout << "|---------------------------|\n";
-                cout << "|Altura:     \t" << var.altMaca << " m     |\n"
-                <<  "|Velocidade:\t" << var.velocidade << " m/s  |\n"
-                << "|dt:          \t" << var.dt << " s/n   |\n";
-            }
-            cout << "\nA maça chegou ao chao. \n";
-            cout << "Tempo de queda: " << tempoSimulado << " segundos\n";
-
-            cout << "Voce deseja fazer outra simulaçao? (sim, nao): ";
-            cin >> var.continuar;
-
-            if (var.continuar == "sim" || var.continuar == "s") {
-                clear();
-                continue;
-            } else {
-                clear();
-                return 0;
-            }
+            clear();
+            return 0;
         }
     }
 }
