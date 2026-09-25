@@ -29,7 +29,7 @@ struct fisica{
     float dAr{1.225};                 //<- densidade do ar em Km por metros cubicos,
     float velocidade{};              //<- m/s,
     float dt{0.0f};     
-    float fArrasto{};            //<- delta time
+    float fArrasto{};              //<- delta time
 };
 
 struct maca{
